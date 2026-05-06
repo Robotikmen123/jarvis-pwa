@@ -188,9 +188,20 @@ async function boot() {
     $("#setupSave").textContent = "START";
   }
 
-  // Register service worker (best-effort)
+  // Register service worker (best-effort) — and force an update check so
+  // deploys reach already-installed PWAs without manual cache clears.
   if ("serviceWorker" in navigator) {
-    try { await navigator.serviceWorker.register("./sw.js"); } catch {}
+    try {
+      const reg = await navigator.serviceWorker.register("./sw.js");
+      reg.update().catch(() => {});
+      // When a new SW takes control, refresh the page so the new code runs.
+      let refreshed = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (refreshed) return;
+        refreshed = true;
+        window.location.reload();
+      });
+    } catch {}
   }
 }
 

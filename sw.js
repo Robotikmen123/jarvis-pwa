@@ -1,6 +1,6 @@
-// Minimal service worker — caches the app shell so the PWA opens offline.
-// Network calls (Gemini Live, weather, etc.) always go to the network.
-const CACHE = "jarvis-shell-v1";
+// Network-first service worker — always tries the network so deploys reach
+// users immediately, falling back to cache only when offline.
+const CACHE = "jarvis-shell-v3";
 const SHELL = [
   "./",
   "./index.html",
@@ -16,26 +16,38 @@ const SHELL = [
 ];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).catch(() => {}));
   self.skipWaiting();
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).catch(() => {}));
 });
 
 self.addEventListener("activate", (e) => {
   e.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    )
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
-  // Never cache the WebSocket or API calls
   if (url.protocol === "wss:" || url.protocol === "ws:") return;
   if (url.host.includes("googleapis.com")) return;
+  if (url.host.includes("wttr.in")) return;
 
-  e.respondWith(
-    caches.match(e.request).then((hit) => hit || fetch(e.request).catch(() => hit))
-  );
+  // Network-first: try the network, cache the fresh response, fall back to
+  // the cached copy only if offline.
+  e.respondWith((async () => {
+    try {
+      const fresh = await fetch(e.request, { cache: "no-cache" });
+      if (fresh && fresh.status === 200 && e.request.method === "GET") {
+        const cache = await caches.open(CACHE);
+        cache.put(e.request, fresh.clone()).catch(() => {});
+      }
+      return fresh;
+    } catch {
+      const hit = await caches.match(e.request);
+      if (hit) return hit;
+      throw new Error("offline and not in cache");
+    }
+  })());
 });
