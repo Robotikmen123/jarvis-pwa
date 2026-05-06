@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#00060A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="JARVIS">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="stylesheet" href="styles.css">
+<title>JARVIS</title>
+</head>
+<body>
+
+<!-- Setup overlay (first run / settings) -->
+<div id="setup" class="setup hidden">
+  <div class="setup-card">
+    <div class="setup-title">J.A.R.V.I.S</div>
+    <div class="setup-sub">Configuration</div>
+
+    <label>Gemini API Key</label>
+    <input id="apiKey" type="password" placeholder="AIza..." autocomplete="off" autocorrect="off" spellcheck="false">
+
+    <label>Voice</label>
+    <select id="voice">
+      <option value="Puck">Puck (default)</option>
+      <option value="Charon">Charon</option>
+      <option value="Kore">Kore</option>
+      <option value="Fenrir">Fenrir</option>
+      <option value="Aoede">Aoede</option>
+    </select>
+
+    <label>Your name (optional)</label>
+    <input id="userName" type="text" placeholder="Murat">
+
+    <button id="setupSave" class="primary">SAVE &amp; START</button>
+    <div class="hint">
+      Key cihazında <code>localStorage</code>'da kalır, hiçbir yere yollanmaz.
+    </div>
+  </div>
+</div>
+
+<!-- Main app -->
+<canvas id="hud"></canvas>
+
+<div id="overlay">
+  <div id="logView"></div>
+
+  <div class="row input-row">
+    <input id="textInput" type="text" placeholder="// konuş..." autocomplete="off">
+    <button id="sendBtn">▶</button>
+  </div>
+
+  <div class="row btn-row">
+    <button id="micBtn" class="ghost">🎙 MIC</button>
+    <button id="settingsBtn" class="ghost">⚙ SETTINGS</button>
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+
+</body>
+</html>
